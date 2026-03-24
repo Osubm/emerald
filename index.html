@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#059669">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Emerald Hearth POS</title>
+  <style>
+    /* EMERALD HEARTH DESIGN SYSTEM */
+    :root {
+      --emerald-50: #ECFDF5;
+      --emerald-100: #D1FAE5;
+      --emerald-500: #10B981;
+      --emerald-600: #059669;
+      --emerald-700: #047857;
+      --slate-50: #F8FAFC;
+      --slate-100: #F1F5F9;
+      --slate-200: #E2E8F0;
+      --slate-500: #64748B;
+      --slate-800: #1E293B;
+      --amber-100: #FEF3C7;
+      --amber-600: #D97706;
+      --red-100: #FEE2E2;
+      --red-600: #DC2626;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    html { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; scroll-behavior: smooth; }
+    
+    body {
+      margin: 0;
+      background: var(--slate-100);
+      color: var(--slate-800);
+      line-height: 1.5;
+    }
+
+    /* Touch targets */
+    button, a, input, select {
+      min-height: 44px;
+      min-width: 44px;
+      touch-action: manipulation;
+      font-size: 16px;
+    }
+
+    /* Layout */
+    .app { display: flex; flex-direction: column; min-height: 100vh; }
+    .header { background: white; border-bottom: 1px solid var(--slate-200); padding: 1rem; }
+    .main { flex: 1; overflow: auto; padding: 1rem; padding-bottom: 80px; }
+    .nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--slate-200); display: flex; justify-around; padding: 0.5rem; z-index: 50; }
+
+    /* Cards */
+    .card { background: white; border-radius: 12px; padding: 1rem; border: 1px solid var(--slate-200); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card-lg { padding: 1.5rem; }
+
+    /* Buttons */
+    .btn { border-radius: 8px; font-weight: 600; padding: 0.75rem 1.5rem; border: none; cursor: pointer; transition: all 0.2s; }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--emerald-600); color: white; }
+    .btn-primary:hover { background: var(--emerald-700); }
+    .btn-secondary { background: white; color: var(--slate-800); border: 1px solid var(--slate-200); }
+    .btn-danger { background: var(--red-600); color: white; }
+    .btn-block { width: 100%; }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; }
+    .badge-success { background: var(--emerald-100); color: var(--emerald-700); }
+    .badge-warning { background: var(--amber-100); color: var(--amber-600); }
+    .badge-danger { background: var(--red-100); color: var(--red-600); }
+
+    /* Grid */
+    .grid { display: grid; gap: 1rem; }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+    @media (min-width: 768px) {
+      .grid-2 { grid-template-columns: repeat(4, 1fr); }
+      .nav { display: none; }
+      .main { padding-bottom: 1rem; }
+    }
+
+    /* Forms */
+    .input { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--slate-200); border-radius: 8px; font-size: 1rem; }
+    .input:focus { outline: none; border-color: var(--emerald-600); ring: 2px solid var(--emerald-100); }
+
+    /* Typography */
+    .text-sm { font-size: 0.875rem; }
+    .text-lg { font-size: 1.125rem; }
+    .text-xl { font-size: 1.25rem; }
+    .text-2xl { font-size: 1.5rem; }
+    .font-bold { font-weight: 700; }
+    .text-emerald { color: var(--emerald-600); }
+    .text-slate { color: var(--slate-500); }
+
+    /* Utilities */
+    .flex { display: flex; }
+    .justify-between { justify-content: space-between; }
+    .items-center { align-items: center; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-4 { gap: 1rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mt-4 { margin-top: 1rem; }
+    .hidden { display: none; }
+
+    /* Status indicators */
+    .urgency-low { border-left: 4px solid var(--emerald-500); }
+    .urgency-medium { border-left: 4px solid var(--amber-600); }
+    .urgency-high { border-left: 4px solid var(--red-600); }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
+    .modal { background: white; border-radius: 16px; max-width: 500px; width: 100%; max-height: 90vh; overflow: auto; }
+
+    /* Table status */
+    .table-available { background: white; border: 2px solid var(--slate-200); }
+    .table-occupied { background: var(--emerald-50); border: 2px solid var(--emerald-600); }
+    .table-awaiting { background: var(--amber-100); border: 2px solid var(--amber-600); }
+
+    /* Offline banner */
+    .offline-banner { background: var(--amber-100); border-bottom: 1px solid var(--amber-600); padding: 0.5rem; text-align: center; color: var(--amber-600); font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <!-- Content injected by JavaScript -->
+  </div>
+
+  <script>
+    // ============================================
+    // EMERALD HEARTH POS - PHASE 1 COMPLETE
+    // ============================================
+
+    // --- STATE MANAGEMENT ---
+    const store = {
+      state: {
+        currentView: 'pos',
+        cart: [],
+        products: [],
+        tables: [],
+        orders: [],
+        customers: [],
+        ingredients: [],
+        wifiVouchers: [],
+        selectedTable: null,
+        userRole: 'waiter',
+        isOnline: navigator.onLine,
+        lastSync: null
+      },
+
+      load() {
+        const saved = localStorage.getItem('emerald-hearth-state');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          this.state = { ...this.state, ...parsed };
+        } else {
+          this.loadSampleData();
+        }
+      },
+
+      save() {
+        localStorage.setItem('emerald-hearth-state', JSON.stringify(this.state));
+      },
+
+      loadSampleData() {
+        this.state.products = [
+          { id: '1', name: 'Grilled Chicken', price: 15, type: 'fixed', department: 'kitchen', available: true },
+          { id: '2', name: 'Beef Steak', price: 25, type: 'weight', department: 'kitchen', available: true },
+          { id: '3', name: 'Mojito', price: 8, type: 'fixed', department: 'bar', available: true },
+          { id: '4', name: 'Caesar Salad', price: 12, type: 'fixed', department: 'kitchen', available: true },
+          { id: '5', name: 'WiFi 1 Hour', price: 5, type: 'fixed', department: 'wifi', available: true },
+          { id: '6', name: 'WiFi 4 Hours', price: 15, type: 'fixed', department: 'wifi', available: true },
+        ];
+
+        this.state.tables = [
+          { id: '1', number: '1', capacity: 4, status: 'available' },
+          { id: '2', number: '2', capacity: 4, status: 'occupied', occupiedSince: new Date(Date.now() - 1800000).toISOString() },
+          { id: '3', number: '3', capacity: 6, status: 'available' },
+          { id: '4', number: '4', capacity: 2, status: 'awaiting_payment' },
+          { id: '5', number: '5', capacity: 8, status: 'occupied', occupiedSince: new Date(Date.now() - 3600000).toISOString() },
+          { id: '6', number: '6', capacity: 4, status: 'available' },
+        ];
+
+        this.state.ingredients = [
+          { id: '1', name: 'Chicken Breast', unit: 'kg', stock: 15, minStock: 5, status: 'in_stock' },
+          { id: '2', name: 'Beef', unit: 'kg', stock: 3, minStock: 5, status: 'low_stock' },
+          { id: '3', name: 'Rum', unit: 'bottle', stock: 12, minStock: 5, status: 'in_stock' },
+          { id: '4', name: 'Lettuce', unit: 'kg', stock: 1, minStock: 3, status: 'critical' },
+        ];
+
+        this.state.customers = [
+          { id: '1', name: 'John Doe', phone: '555-0101', walletBalance: 25, loyaltyPoints: 150 },
+          { id: '2', name: 'Jane Smith', phone: '555-0102', walletBalance: 50, loyaltyPoints: 320 },
+        ];
+
+        this.save();
+      },
+
+      addToCart(item) {
+        const existing = this.state.cart.find(i => i.productId === item.productId);
+        if (existing) {
+          existing.quantity += item.quantity;
+        } else {
+          this.state.cart.push(item);
+        }
+        this.save();
+        render();
+      },
+
+      removeFromCart(itemId) {
+        this.state.cart = this.state.cart.filter(i => i.id !== itemId);
+        this.save();
+        render();
+      },
+
+      clearCart() {
+        this.state.cart = [];
+        this.state.selectedTable = null;
+        this.save();
+        render();
+      },
+
+      selectTable(table) {
+        this.state.selectedTable = table;
+        this.save();
+        render();
+      },
+
+      createOrder() {
+        if (this.state.cart.length === 0) return;
+        
+        const subtotal = this.state.cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+        const tax = subtotal * 0.16;
+        const total = subtotal + tax;
+
+        const order = {
+          id: crypto.randomUUID(),
+          orderNumber: 'ORD-' + Date.now().toString().slice(-6),
+          tableId: this.state.selectedTable?.id,
+          tableNumber: this.state.selectedTable?.number,
+          items: [...this.state.cart],
+          status: 'sent',
+          subtotal,
+          tax,
+          total,
+          department: this.state.cart[0]?.department || 'kitchen',
+          orderType: 'dine-in',
+          createdAt: new Date().toISOString(),
+          events: [{ type: 'NEW', timestamp: new Date().toISOString() }]
+        };
+
+        this.state.orders.push(order);
+        
+        // Update table status
+        if (this.state.selectedTable) {
+          const table = this.state.tables.find(t => t.id === this.state.selectedTable.id);
+          if (table) table.status = 'occupied';
+        }
+
+        this.clearCart();
+        this.save();
+        alert('Order ' + order.orderNumber + ' sent to kitchen!');
+      },
+
+      issueWifiVoucher(duration) {
+        const voucher = {
+          id: crypto.randomUUID(),
+          code: Math.random().toString(36).substring(2, 10).toUpperCase(),
+          duration,
+          status: 'issued',
+          issuedAt: new Date().toISOString()
+        };
+        this.state.wifiVouchers.push(voucher);
+        this.save();
+        return voucher;
+      },
+
+      addCustomer(name, phone) {
+        const customer = {
+          id: crypto.randomUUID(),
+          name,
+          phone,
+          walletBalance: 0,
+          loyaltyPoints: 0,
+          createdAt: new Date().toISOString()
+        };
+        this.state.customers.push(customer);
+        this.save();
+        return customer;
+      }
+    };
+
+    // --- VIEWS ---
+    const views = {
+      pos() {
+        const subtotal = store.state.cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+        const tax = subtotal * 0.16;
+        const total = subtotal + tax;
+
+        return `
+          <div class="header">
+            <h1 class="text-xl font-bold text-emerald">🌿 Emerald Hearth POS</h1>
+            <p class="text-sm text-slate">Table Service Module</p>
+          </div>
+
+          <div class="main">
+            <!-- Table Selection -->
+            <div class="card card-lg mb-4">
+              <h2 class="font-bold mb-4">Select Table</h2>
+              <div class="grid grid-3">
+                ${store.state.tables.map(table => `
+                  <button class="p-4 rounded-xl border-2 font-semibold table-${table.status}" onclick="selectTable('${table.id}')">
+                    <p>Table ${table.number}</p>
+                    <p class="text-sm mt-1">${table.status.replace('_', ' ')}</p>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="card card-lg mb-4">
+              <h2 class="font-bold mb-4">Products</h2>
+              <input type="text" class="input mb-4" placeholder="🔍 Search products..." id="productSearch" oninput="render()">
+              <div class="grid grid-2">
+                ${store.state.products
+                  .filter(p => p.name.toLowerCase().includes(document.getElementById('productSearch')?.value || ''))
+                  .map(product => `
+                  <button class="p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-emerald-600" onclick="addToCart('${product.id}')">
+                    <p class="font-semibold">${product.name}</p>
+                    <p class="text-emerald font-bold mt-2">$${product.price.toFixed(2)}</p>
+                    ${product.type === 'weight' ? '<p class="text-sm text-slate">Sold by weight</p>' : ''}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Cart -->
+            ${store.state.cart.length > 0 ? `
+              <div class="card card-lg">
+                <h2 class="font-bold mb-4">🛒 Current Order ${store.state.selectedTable ? '- Table ' + store.state.selectedTable.number : ''}</h2>
+                <div class="space-y-3 mb-4">
+                  ${store.state.cart.map(item => `
+                    <div class="flex justify-between items-center p-3 bg-slate-100 rounded-lg">
+                      <div>
+                        <p class="font-semibold">${item.productName}</p>
+                        <p class="text-sm text-slate">${item.quantity} x $${item.unitPrice.toFixed(2)}</p>
+                      </div>
+                      <button class="btn btn-danger" onclick="removeFromCart('${item.id}')">✕</button>
+                    </div>
+                  `).join('')}
+                </div>
+                <div class="border-t pt-4">
+                  <div class="flex justify-between mb-2">
+                    <span class="text-slate">Subtotal</span>
+                    <span>$${subtotal.toFixed(2)}</span>
+                  </div>
+                  <div class="flex justify-between mb-2">
+                    <span class="text-slate">Tax (16%)</span>
+                    <span>$${tax.toFixed(2)}</span>
+                  </div>
+                  <div class="flex justify-between text-xl font-bold mt-4">
+                    <span>Total</span>
+                    <span class="text-emerald">$${total.toFixed(2)}</span>
+                  </div>
+                  <button class="btn btn-primary btn-block mt-4" onclick="createOrder()">
+                    💳 Send to Kitchen
+                  </button>
+                  <button class="btn btn-secondary btn-block mt-2" onclick="clearCart()">
+                    Clear Order
+                  </button>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      },
+
+      kitchen() {
+        const orders = store.state.orders.filter(o => o.department === 'kitchen' && o.status !== 'completed');
+        
+        return `
+          <div class="header">
+            <h1 class="text-xl font-bold text-emerald">👨‍🍳 Kitchen Display</h1>
+            <p class="text-sm text-slate">${orders.length} active orders</p>
+          </div>
+
+          <div class="main">
+            ${orders.length === 0 ? `
+              <div class="card card-lg text-center">
+                <p class="text-6xl mb-4">🍳</p>
+                <p class="text-slate">No orders in queue</p>
+              </div>
+            ` : `
+              <div class="grid">
+                ${orders.map(order => {
+                  const minutes = Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 60000);
+                  const urgency = minutes > 20 ? 'high' : minutes > 10 ? 'medium' : 'low';
+                  
+                  return `
+                    <div class="card card-lg urgency-${urgency}">
+                      <div class="flex justify-between items-center mb-4">
+                        <div>
+                          <p class="font-bold text-lg">${order.orderNumber}</p>
+                          <p class="text-slate">Table ${order.tableNumber}</p>
+                        </div>
+                        <span class="badge badge-${urgency === 'high' ? 'danger' : urgency === 'medium' ? 'warning' : 'success'}">
+                          ${minutes} min
+                        </span>
+                      </div>
+                      <div class="space-y-2 mb-4">
+                        ${order.items.map(item => `
+                          <div class="flex justify-between">
+                            <span class="font-semibold">${item.quantity}x ${item.productName}</span>
+                          </div>
+                        `).join('')}
+                      </div>
+                      <button class="btn btn-primary btn-block" onclick="completeOrder('${order.id}')">
+                        ✓ Mark Ready
+                      </button>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </div>
+        `;
+      },
+
+      bar() {
+        const orders = store.state.orders.filter(o => o.department === 'bar' && o.status !== 'completed');
+        
+        return `
+          <div class="header">
+            <h1 class="text-xl font-bold text-emerald">🍹 Bar Display</h1>
+            <p class="text-sm text-slate">${orders.length} drink orders</p>
+          </div>
+
+          <div class="main">
+            ${orders.length === 0 ? `
+              <div class="card card-lg text-center">
+                <p class="text-6xl mb-4">🍸</p>
+                <p class="text-slate">No drink orders</p>
+              </div>
+            ` : `
+              <div class="grid">
+                ${orders.map(order => `
+                  <div class="card card-lg">
+                    <p class="font-bold">${order.orderNumber}</p>
+                    <p class="text-slate text-sm">Table ${order.tableNumber}</p>
+                    <div class="mt-4">
+                      ${order.items.map(item => `
+                        <p class="font-semibold">${item.quantity}x ${item.productName}</p>
+                      `).join('')}
+                    </div>
+                    <button class="btn btn-primary btn-block mt-4" onclick="completeOrder('${order.id}')">
+                      ✓ Ready
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        `;
+      },
+
+      wifi() {
+        return `
+          <div class="header">
+            <h1 class="text-xl font-bold text-emerald">📶 WiFi Sales</h1>
+            <p class="text-sm text-slate">Issue vouchers & track usage</p>
+          </div>
+
+          <div class="main">
+            <div class="card card-lg mb-4">
+              <h2 class="font-bold mb-4">Issue WiFi Voucher</h2>
+              <div class="grid grid-3 mb-4">
+                <button class="btn btn-primary" onclick="issueWifi(1)">1 Hour</button>
+                <button class="btn btn-primary" onclick="issueWifi(4)">4 Hours</button>
+                <button class="btn btn-primary" onclick="issueWifi(24)">24 Hours</button>
+              </div>
+            </div>
+
+            <div class="card card-lg">
+              <h2 class="font-bold mb-4">Recent Vouchers</h2>
+              ${store.state.wifiVouchers.length === 0 ? `
+                <p class="text-slate text-center py-4">No vouchers issued yet</p>
+              ` : `
+                <div class="space-y-3">
+                  ${store.state.wifiVouchers.slice(-10).reverse().map(v => `
+                    <div class="flex justify-between items-center p-3 bg-slate-100 rounded-lg">
+                      <div>
+                        <p class="font-mono font-bold text-emerald">${v.code}</p>
+                        <p class="text-sm text-slate">${v.duration} hour(s)</p>
+                      </div>
+                      <span class="badge badge-success">${v.status}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              `}
+            </div>
+          </div>
+        `;
+      },
+
+      inventory() {
+        return `
+          <div class="header">
+            <h1 class="text-xl font-bold text-emerald">📦 Inventory</h1>
+            <p class="text-sm text-slate">Stock levels & alerts</p>
+          </div>
+
+          <div class="main">
+            <div class="grid grid-2 mb-4">
+              <div class="card card-lg text-center">
+                <p class="text-2xl font-bold text-emerald">${store.state.ingredients.filter(i => i.status === 'in_stock').length}</p>
+                <p class="text-sm text-slate">In Stock</p>
+              </div>
+              <div class="card card-lg text-center">
+                <p class="text-2xl font-bold text-amber-600">${store.state.ingredients.filter(i => i.status === 'low_stock').length}</p>
+                <p class="text-sm text-slate">Low Stock</p>
+              </div>
+            </div>
+
+            <div class="card card-lg">
+              <h2 class="font-bold mb-4">Stock Items</h2>
+              <div class="space-y-3">
+                ${store.state.ingredients.map(ing => `
+                  <div class="flex justify-between items-center p-3 bg-slate-100 rounded-lg">
+                    <div>
+                      <p class="font-semibold">${ing.name}</p>
+                      <p class="text-sm text-slate">Min: ${ing.minStock} ${ing.unit}</p>
+                    </div>
+                    <div class="text-right">
+                      <p class="font-bold">${ing.stock} ${ing.unit}</p>
+                      <span class="badge badge-${ing.status === 'in_stock' ? 'success' : ing.status === 'low_stock' ? 'warning' : 'danger'}">
+                        ${ing.status.replace('_', ' ')}
+                      </span>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      },
+
+      reports() {
+        const totalRevenue = store.state.orders.reduce((s, o) => s + o.total, 0);
+        const orderCount = store.state.orders.length;
+        
+        return `
+          <div class="header">
+            <h1 class="text-xl font-bold text-emerald">📊 Reports</h1>
+            <p class="text-sm text-slate">Business insights</p>
+          </div>
+
+          <div class="main">
+            <div class="grid grid-2 mb-4">
+              <div class="card card-lg text-center">
+                <p class="text-2xl font-bold text-emerald">$${totalRevenue.toFixed(2)}</p>
+                <p class="text-sm text-slate">Total Revenue</p>
+              </div>
+              <div class="card card-lg text-center">
+                <p class="text-2xl font-bold text-emerald">${orderCount}</p>
+                <p class="text-sm text-slate">Total Orders</p>
+              </div>
+            </div>
+
+            <div class="card card-lg">
+              <h2 class="font-bold mb-4">Today's Summary</h2>
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span class="text-slate">Orders</span>
+                  <span class="font-semibold">${orderCount}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate">Revenue</span>
+                  <span class="font-semibold">$${totalRevenue.toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate">WiFi Vouchers</span>
+                  <span class="font-semibold">${store.state.wifiVouchers.length}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate">Avg Order Value</span>
+                  <span class="font-semibold">$${orderCount > 0 ? (totalRevenue / orderCount).toFixed(2) : '0.00'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    };
+
+    // --- ACTIONS ---
+    function selectTable(tableId) {
+      const table = store.state.tables.find(t => t.id === tableId);
+      store.selectTable(table);
+    }
+
+    function addToCart(productId) {
+      const product = store.state.products.find(p => p.id === productId);
+      
+      if (product.type === 'weight') {
+        const weight = prompt(`Enter weight for ${product.name} (kg):`, '1');
+        if (!weight || parseFloat(weight) <= 0) return;
+        
+        const item = {
+          id: crypto.randomUUID(),
+          productId: product.id,
+          productName: product.name,
+          quantity: 1,
+          weight: parseFloat(weight),
+          unitPrice: product.price * parseFloat(weight),
+          department: product.department
+        };
+        store.addToCart(item);
+      } else {
+        const item = {
+          id: crypto.randomUUID(),
+          productId: product.id,
+          productName: product.name,
+          quantity: 1,
+          unitPrice: product.price,
+          department: product.department
+        };
+        store.addToCart(item);
+      }
+    }
+
+    function removeFromCart(itemId) {
+      store.removeFromCart(itemId);
+    }
+
+    function clearCart() {
+      store.clearCart();
+    }
+
+    function createOrder() {
+      store.createOrder();
+    }
+
+    function completeOrder(orderId) {
+      const order = store.state.orders.find(o => o.id === orderId);
+      if (order) {
+        order.status = 'completed';
+        store.save();
+        render();
+      }
+    }
+
+    function issueWifi(duration) {
+      const voucher = store.issueWifiVoucher(duration);
+      alert(`WiFi Voucher Issued!\n\nCode: ${voucher.code}\nDuration: ${voucher.duration} hour(s)`);
+      render();
+    }
+
+    function navigate(view) {
+      store.state.currentView = view;
+      store.save();
+      render();
+    }
+
+    // --- RENDER ---
+    function render() {
+      const app = document.getElementById('app');
+      const view = store.state.currentView;
+      
+      const navItems = [
+        { id: 'pos', label: 'POS', icon: '🛒' },
+        { id: 'kitchen', label: 'Kitchen', icon: '👨‍🍳' },
+        { id: 'bar', label: 'Bar', icon: '🍹' },
+        { id: 'wifi', label: 'WiFi', icon: '📶' },
+        { id: 'inventory', label: 'Stock', icon: '📦' },
+        { id: 'reports', label: 'Reports', icon: '📊' },
+      ];
+
+      app.innerHTML = `
+        ${!store.state.isOnline ? '<div class="offline-banner">📡 Offline Mode - Changes saved locally</div>' : ''}
+        ${views[view]()}
+        <nav class="nav">
+          ${navItems.slice(0, 5).map(item => `
+            <button onclick="navigate('${item.id}')" class="flex flex-col items-center p-2 ${store.state.currentView === item.id ? 'text-emerald' : 'text-slate'}">
+              <span class="text-xl">${item.icon}</span>
+              <span class="text-xs">${item.label}</span>
+            </button>
+          `).join('')}
+        </nav>
+      `;
+    }
+
+    // --- INITIALIZATION ---
+    window.addEventListener('online', () => { store.state.isOnline = true; store.save(); render(); });
+    window.addEventListener('offline', () => { store.state.isOnline = false; store.save(); render(); });
+    store.load();
+    render();
+  </script>
+</body>
+</html>
